@@ -1,0 +1,1 @@
+from mweb_orm.model.mweb_base_model import MWebBaseModel
