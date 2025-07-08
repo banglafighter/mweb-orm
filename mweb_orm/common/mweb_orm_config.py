@@ -1,0 +1,4 @@
+
+
+class MWebORMConfig:
+    pass
