@@ -8,14 +8,14 @@ mweb_orm_cli = MWebCLI(name="db", help_text="MWeb Database Manipulation Interfac
 _orm_mweb_app: MWebBase = None
 
 
-@mweb_orm_cli.command("init", help="Initialize database tables")
+@mweb_orm_cli.command("init", help="Initialize database models")
 def initialize():
     asyncio.run(_initialize_async())
 
 async def _initialize_async():
     async with _orm_mweb_app.app_context():
         await mweb_orm.create_drop_all_model(action="create")
-        Console.blue("Successfully Initialized Database & Tables", bold=True, system_log=True)
+        Console.blue("Successfully Initialized Database & Models", bold=True, system_log=True)
 
 
 @mweb_orm_cli.command("drop", help="Drop database tables")
@@ -26,7 +26,7 @@ def drop():
 async def _drop_async():
     async with _orm_mweb_app.app_context():
         await mweb_orm.create_drop_all_model(action="drop")
-        Console.blue('Successfully Drop Database Tables', bold=True, system_log=True)
+        Console.blue('Successfully Drop Database Models', bold=True, system_log=True)
 
 
 def register_mweb_orm_cli(mweb_app: MWebBase, config: MWebConfig):
