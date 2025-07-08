@@ -1,5 +1,6 @@
 from mw_common.mw_console_log import Console
 from mw_common.mw_exception import MwException
+from mweb.engine.mweb_registry import MWebRegistry
 from mweb_orm import MWebBaseModel
 from mweb_orm.orm.mweb_orm_actions import MWebORMActions
 from mweb_orm.orm.mweb_orm_data import DBConnectionData
@@ -86,6 +87,8 @@ class MWebORM(MWebORMProps, MWebORMActions):
     async def create_drop_all_model(self, action: str = "create"):
         db_key_to_models = self.get_db_key_and_model_dict()
         for db_key, tables in db_key_to_models.items():
+            if not MWebRegistry.config.ENABLE_SAAS and db_key == "MWebSaaS":
+                continue
             await self._create_drop_model_by_data(db_key=db_key, models=tables, action=action)
 
     async def create_drop_default_model_by_db_key(self, db_key: str, action: str = "create"):
