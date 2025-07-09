@@ -1,5 +1,7 @@
+from math import ceil
 from sqlalchemy import select as sa_select, func
 from mw_common.mw_exception import MwException
+from mweb_orm.common import Pagination
 from mweb_orm.orm import mweb_orm
 
 
@@ -44,8 +46,9 @@ class MWebQueryProcessor:
         self._offset = value
         return self
 
-    def _assemble_and_get_query(self):
-        query = sa_select(*(self._fields if self._fields else [self.model]))
+    def _assemble_and_get_query(self, query=None):
+        if query is None:
+            query = sa_select(*(self._fields if self._fields else [self.model]))
 
         if self._filters:
             query = query.where(*self._filters)
@@ -93,6 +96,61 @@ class MWebQueryProcessor:
             return result.all()
         else:
             return result.unique().scalars().all()
+
+    async def first(self):
+        query = self._assemble_and_get_query()
+        query = query.limit(1)
+        result = await self._execute(query=query)
+        if self._fields:
+            return result.first()
+        else:
+            return result.unique().scalars().first()
+
+    async def count(self):
+        query = sa_select(func.count()).select_from(self.model)
+        query = self._assemble_and_get_query(query=query)
+        result = await self._execute(query=query)
+        return result.scalar_one()
+
+    async def paginate(self, page: int = 1, item_per_page: int = 20, count: bool = True) -> Pagination:
+        page = max(page or 1, 1)
+
+        if item_per_page == -1:
+            self._limit = None
+            self._offset = None
+        else:
+            item_per_page = max(item_per_page, 1)
+            self._limit = item_per_page
+            self._offset = (page - 1) * item_per_page
+
+        query = self._assemble_and_get_query()
+        result = await self._execute(query=query)
+
+        items = (
+            result.unique().scalars().all()
+            if not self._fields
+            else result.all()
+        )
+
+        total = 0
+        total_pages = 1
+
+        if count:
+            count_query = sa_select(func.count()).select_from(self.model)
+            count_query = self._assemble_and_get_query(query=count_query)
+            count_result = await self._execute(query=count_query)
+            total = count_result.scalar_one()
+            total_pages = (
+                1 if item_per_page == -1 else ceil(total / item_per_page) if total else 1
+            )
+
+        return Pagination(
+            page=page,
+            itemPerPage=item_per_page,
+            total=total,
+            totalPage=total_pages,
+            items=items,
+        )
 
 
 class MWebPropsQueryProcessor:
