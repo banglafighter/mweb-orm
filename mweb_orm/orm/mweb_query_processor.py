@@ -1,5 +1,5 @@
 from math import ceil
-from sqlalchemy import select as sa_select, func
+from sqlalchemy import select as sa_select, func, update as sa_update, delete as sa_delete
 from mw_common.mw_exception import MwException
 from mweb_orm.common import Pagination
 from mweb_orm.orm import mweb_orm
@@ -151,6 +151,33 @@ class MWebQueryProcessor:
             totalPage=total_pages,
             items=items,
         )
+
+    async def update(self, values: dict):
+        if not values:
+            raise MwException("No update values provided.")
+
+        if not self._filters:
+            raise MwException("Update without filter is not allowed.")
+
+        query = sa_update(self.model).where(*self._filters).values(**values)
+        await self._begin_execute(query)
+
+    async def delete(self):
+        if not self._filters:
+            raise MwException("Delete without filter is not allowed.")
+
+        query = sa_delete(self.model).where(*self._filters)
+        await self._begin_execute(query)
+
+    async def soft_delete(self):
+        if not self._filters:
+            raise MwException("Soft delete without filter is not allowed.")
+
+        if not hasattr(self.model, "isDeleted"):
+            raise MwException("Model does not support soft delete.")
+
+        query = sa_update(self.model).where(*self._filters).values(isDeleted=True)
+        await self._begin_execute(query)
 
 
 class MWebPropsQueryProcessor:
