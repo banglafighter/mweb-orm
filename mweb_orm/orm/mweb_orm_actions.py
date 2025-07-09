@@ -1,8 +1,8 @@
 from mw_common.mw_exception import MwException
 from mweb.engine.mweb_registry import MWebRegistry
-from mweb_orm import MWebBaseModel
 from mweb_orm.common.mweb_orm_connector import MWebTenantResolver
 from mweb_orm.common.mweb_orm_hook import MWebORMHook
+from mweb_orm.model.mweb_master_model import MWebMasterModel
 from mweb_orm.orm.mweb_orm_data import DBConnectionData
 
 
@@ -49,7 +49,7 @@ class MWebORMActions:
 
     def get_db_key_and_model_dict(self) -> dict:
         db_key_to_models = {}
-        for cls in MWebBaseModel.registry.mappers:
+        for cls in MWebMasterModel.registry.mappers:
             model = cls.class_
             db_key = self.get_model_db_key(model_class=model)
             table = model.__table__

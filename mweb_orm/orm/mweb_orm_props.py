@@ -1,9 +1,10 @@
-from typing import Optional, Any, Literal
+from typing import Optional, Any, Literal, Union
 from sqlalchemy import (
     Integer, String, Boolean, DateTime, Date, Float, Text, BigInteger, Time, SmallInteger,
     ForeignKey, func
 )
 from sqlalchemy.orm import MappedColumn, relationship
+from sqlalchemy.orm.interfaces import _AttributeOptions
 from sqlalchemy.sql.base import _NoArg
 from sqlalchemy.sql.functions import _FunctionGenerator
 
@@ -35,6 +36,7 @@ class MWebORMProps:
                unique: bool = None,
                index: bool = None,
                default: Optional[Any] = _NoArg.NO_ARG,
+               init: Union[_NoArg, bool] = _NoArg.NO_ARG,
                onupdate=None,
                **kw: Any,
                ) -> MappedColumn:
@@ -44,11 +46,24 @@ class MWebORMProps:
             argument_list.append(foreign_key)
         argument = tuple(argument_list)
 
+        # Don't know the usages that's why not adding as params
+        default_factory = _NoArg.NO_ARG
+        repr = _NoArg.NO_ARG
+        compare = _NoArg.NO_ARG
+        kw_only = True
+        hash = _NoArg.NO_ARG
+
+        if (nullable == True or autoincrement == True) and init == _NoArg.NO_ARG:
+            init = False
+
         return MappedColumn(
             *argument,
             name=name, type_=data_type, primary_key=primary_key, index=index,
             unique=unique, default=default, autoincrement=autoincrement, nullable=nullable,
             onupdate=onupdate,
+            attribute_options=_AttributeOptions(
+                init, repr, default, default_factory, compare, kw_only, hash
+            ),
             **kw,
         )
 

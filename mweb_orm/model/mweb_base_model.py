@@ -1,53 +1,29 @@
-import re
-from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass, DeclarativeMeta, DeclarativeBaseNoMeta, decl_api,  declared_attr
+from mweb_orm.model.mweb_master_model import MWebMasterModel
+from mweb_orm.orm import mweb_orm
 
 
-def camel_to_snake_case(name: str) -> str:
-    name = re.sub(r"((?<=[a-z0-9])[A-Z]|(?!^)[A-Z](?=[a-z]))", r"_\1", name)
-    return name.lower().lstrip("_")
-
-def should_set_tablename(cls: type) -> bool:
-    if (
-        cls.__dict__.get("__abstract__", False)
-        or (
-            not issubclass(cls, (DeclarativeBase, DeclarativeBaseNoMeta))
-            and not any(isinstance(b, DeclarativeMeta) for b in cls.__mro__[1:])
-        )
-        or any(
-            (b is DeclarativeBase or b is DeclarativeBaseNoMeta)
-            for b in cls.__bases__
-        )
-    ):
-        return False
-
-    for base in cls.__mro__:
-        if "__tablename__" not in base.__dict__:
-            continue
-
-        if isinstance(base.__dict__["__tablename__"], declared_attr):
-            return False
-
-        return not (
-            base is cls
-            or base.__dict__.get("__abstract__", False)
-            or not (
-                # SQLAlchemy 1.x
-                isinstance(base, DeclarativeMeta)
-                # 2.x: DeclarativeBas uses this as metaclass
-                or isinstance(base, decl_api.DeclarativeAttributeIntercept)
-                # 2.x: DeclarativeBaseNoMeta doesn't use a metaclass
-                or issubclass(base, DeclarativeBaseNoMeta)
-            )
-        )
-
-    return True
-
-
-class MWebBaseModel(DeclarativeBase, MappedAsDataclass):
+class MWebBaseModel(MWebMasterModel):
     __abstract__ = True
 
-    def __init_subclass__(cls, **kwargs):
-        if should_set_tablename(cls):
-            cls.__tablename__ = camel_to_snake_case(cls.__name__)
+    def before_save(self):
+        """
+            This method is called before saving the data.
+        """
+        return self
 
-        super().__init_subclass__(**kwargs)
+    def after_save(self):
+        """
+            This method is called after saving the data.
+        """
+        return self
+
+    async def save(self, commit: bool = True):
+        async with await mweb_orm.get_session() as session:
+            async with session.begin():
+                self.before_save()
+                session.add(self)
+                await session.flush()
+                self.after_save()
+                if commit:
+                    await session.commit()
+        return self

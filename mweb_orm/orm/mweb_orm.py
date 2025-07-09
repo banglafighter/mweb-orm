@@ -1,7 +1,6 @@
 from mw_common.mw_console_log import Console
 from mw_common.mw_exception import MwException
 from mweb.engine.mweb_registry import MWebRegistry
-from mweb_orm import MWebBaseModel
 from mweb_orm.orm.mweb_orm_actions import MWebORMActions
 from mweb_orm.orm.mweb_orm_data import DBConnectionData
 from contextvars import ContextVar
@@ -59,6 +58,7 @@ class MWebORM(MWebORMProps, MWebORMActions):
         _orm_session_context.set(None)
 
     async def _create_drop_model_by_data(self, db_key: str, models, action: str = "create"):
+        from mweb_orm.model.mweb_master_model import MWebMasterModel  # Added Inside Method for avoid circular import
         engine = self.get_engine(db_key=db_key)
         if not engine:
             Console.error(f" engine for {db_key} not found, skipping", system_log=True)
@@ -67,7 +67,7 @@ class MWebORM(MWebORMProps, MWebORMActions):
         async with engine.begin() as connection:
             if action == "create":
                 await connection.run_sync(
-                    lambda sync_connection: MWebBaseModel.metadata.create_all(
+                    lambda sync_connection: MWebMasterModel.metadata.create_all(
                         sync_connection,
                         tables=models
                     )
@@ -75,7 +75,7 @@ class MWebORM(MWebORMProps, MWebORMActions):
                 Console.info(f"Created models for database = {db_key if db_key else "Default"}", system_log=True)
             elif action == "drop":
                 await connection.run_sync(
-                    lambda sync_connection: MWebBaseModel.metadata.drop_all(
+                    lambda sync_connection: MWebMasterModel.metadata.drop_all(
                         sync_connection,
                         tables=models
                     )
