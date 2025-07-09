@@ -1,4 +1,6 @@
 import re
+
+from sqlalchemy import inspect
 from sqlalchemy.orm import DeclarativeBase, MappedAsDataclass, DeclarativeMeta, DeclarativeBaseNoMeta, decl_api,  declared_attr
 
 
@@ -51,3 +53,17 @@ class MWebMasterModel(DeclarativeBase, MappedAsDataclass):
             cls.__tablename__ = camel_to_snake_case(cls.__name__)
 
         super().__init_subclass__(**kwargs)
+        cls.__repr__ = MWebMasterModel.__repr__
+
+    def __repr__(self) -> str:
+        state = inspect(self)
+        assert state is not None
+
+        if state.transient:
+            pk = f"(transient {id(self)})"
+        elif state.pending:
+            pk = f"(pending {id(self)})"
+        else:
+            pk = ", ".join(map(str, state.identity))
+
+        return f"<{type(self).__name__} {pk}>"

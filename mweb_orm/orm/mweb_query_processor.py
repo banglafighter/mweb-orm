@@ -1,0 +1,100 @@
+from sqlalchemy import select as sa_select, func
+from mw_common.mw_exception import MwException
+from mweb_orm.orm import mweb_orm
+
+
+class MWebQueryProcessor:
+
+    def __init__(self, model, fields=None):
+        self.model = model
+        self._fields = fields
+        self._filters = []
+        self._order_by = []
+        self._group_by = []
+        self._having_conditions = []
+        self._joins = []
+        self._limit = None
+        self._offset = None
+
+    def where(self, *conditions):
+        self._filters.extend(conditions)
+        return self
+
+    def order_by(self, *ordering):
+        self._order_by.extend(ordering)
+        return self
+
+    def group_by(self, *grouping):
+        self._group_by.extend(grouping)
+        return self
+
+    def having(self, *conditions):
+        self._having_conditions.extend(conditions)
+        return self
+
+    def join(self, target, onclause=None, isouter=False):
+        self._joins.append((target, onclause, isouter))
+        return self
+
+    def limit(self, value):
+        self._limit = value
+        return self
+
+    def offset(self, value):
+        self._offset = value
+        return self
+
+    def _assemble_and_get_query(self):
+        query = sa_select(*(self._fields if self._fields else [self.model]))
+
+        if self._filters:
+            query = query.where(*self._filters)
+
+        if self._joins:
+            for target, onclause, isouter in self._joins:
+                query = query.join(target, onclause=onclause, isouter=isouter)
+
+        if self._group_by:
+            query = query.group_by(*self._group_by)
+
+        if self._having_conditions:
+            query = query.having(*self._having_conditions)
+
+        if self._order_by:
+            query = query.order_by(*self._order_by)
+
+        if self._limit is not None:
+            query = query.limit(self._limit)
+
+        if self._offset is not None:
+            query = query.offset(self._offset)
+
+        return query
+
+    async def _execute(self, query):
+        try:
+            async with await mweb_orm.get_session() as session:
+                return await session.execute(query)
+        except Exception as e:
+            raise MwException(e)
+
+    async def _begin_execute(self, query):
+        try:
+            async with await mweb_orm.get_session() as session:
+                async with session.begin():
+                    return await session.execute(query)
+        except Exception as e:
+            raise MwException(e)
+
+    async def read_all(self):
+        query = self._assemble_and_get_query()
+        result = await self._execute(query=query)
+        if self._fields:
+            return result.all()
+        else:
+            return result.unique().scalars().all()
+
+
+class MWebPropsQueryProcessor:
+    def __get__(self, instance, owner):
+        return MWebQueryProcessor(owner)

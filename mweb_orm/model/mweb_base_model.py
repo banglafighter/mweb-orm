@@ -1,7 +1,9 @@
 from typing import TypeVar, Type
 from sqlalchemy import inspect
+from mw_common.mw_exception import MwException
 from mweb_orm.model.mweb_master_model import MWebMasterModel
 from mweb_orm.orm import mweb_orm
+from mweb_orm.orm.mweb_query_processor import MWebQueryProcessor, MWebPropsQueryProcessor
 
 T = TypeVar("T", bound="MWebBaseModel")
 
@@ -23,15 +25,18 @@ class MWebBaseModel(MWebMasterModel):
 
     async def save(self, commit: bool = True):
         self.__was_saved = False
-        async with await mweb_orm.get_session() as session:
-            async with session.begin():
-                self.before_save()
-                session.add(self)
-                await session.flush()
-                self.after_save()
-                if commit:
-                    await session.commit()
-                self._set_save_status(self)
+        try:
+            async with await mweb_orm.get_session() as session:
+                async with session.begin():
+                    self.before_save()
+                    session.add(self)
+                    await session.flush()
+                    self.after_save()
+                    if commit:
+                        await session.commit()
+                    self._set_save_status(self)
+        except Exception as e:
+            raise MwException(e)
         return self
 
     def _set_save_status(self, model):
@@ -42,16 +47,50 @@ class MWebBaseModel(MWebMasterModel):
 
     @classmethod
     async def save_all(cls: Type[T], models: list[T], commit: bool = True):
+        try:
+            async with await mweb_orm.get_session() as session:
+                async with session.begin():
+                    for model in models:
+                        model.before_save()
+                        session.add(model)
+                    await session.flush()
+
+                    for model in models:
+                        model.after_save()
+                        model._set_save_status(model)
+
+                    if commit:
+                        await session.commit()
+        except Exception as e:
+            raise MwException(e)
+
+    def before_delete(self):
+        """
+            This method is called before delete the data.
+        """
+        return self
+
+    def after_delete(self):
+        """
+            This method is called after delete the data.
+        """
+        return self
+
+    async def delete(self):
         async with await mweb_orm.get_session() as session:
-            async with session.begin():
-                for model in models:
-                    model.before_save()
-                    session.add(model)
+            try:
+                self.before_delete()
+                session.delete(self)
                 await session.flush()
+                self.after_delete()
+                await session.commit()
+            except Exception as e:
+                await session.rollback()
+                raise MwException(e)
 
-                for model in models:
-                    model.after_save()
-                    model._set_save_status(model)
+    query: MWebQueryProcessor = MWebPropsQueryProcessor()
 
-                if commit:
-                    await session.commit()
+    @classmethod
+    def select(cls, *fields) -> MWebQueryProcessor:
+        return MWebQueryProcessor(cls, fields=fields if fields else None)
+

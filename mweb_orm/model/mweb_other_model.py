@@ -23,3 +23,4 @@ class MWebModel(MWebDatedModel):
     def before_save(self):
         if not self.uuid:
             self.uuid = MwUtil.uuid()
+
