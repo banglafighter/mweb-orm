@@ -18,7 +18,7 @@ class MWebDatedModel(MWebIDModel):
 class MWebModel(MWebDatedModel):
     __abstract__ = True
     isDeleted: bool = mweb_orm.Column("is_deleted", mweb_orm.Boolean(), default=False, nullable=False)
-    uuid: str = mweb_orm.Column("uuid", mweb_orm.String(40), unique=True, nullable=False, index=True, init=False)
+    uuid: str = mweb_orm.Column("uuid", mweb_orm.String(40), unique=True, index=True, init=False)
 
     def before_save(self):
         if not self.uuid:
