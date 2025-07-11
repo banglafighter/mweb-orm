@@ -3,7 +3,10 @@ from mweb_orm.model.mweb_other_model import MWebModel
 from mweb_orm.model.mweb_other_model import MWebDatedModel
 from mweb_orm.model.mweb_other_model import MWebIDModel
 
-from sqlalchemy import and_, or_
+from sqlalchemy import and_ as sa_and_, or_ as sa_or_
+
+and_ = sa_and_
+or_ = sa_or_
 
 __all__ = [
     "and_",
@@ -12,4 +15,5 @@ __all__ = [
     "MWebDatedModel",
     "MWebModel",
     "MWebBaseModel",
+    "MWebIDModel",
 ]
