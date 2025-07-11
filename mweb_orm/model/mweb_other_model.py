@@ -6,7 +6,7 @@ from mweb_orm.orm.mweb_orm import mweb_orm
 
 class MWebIDModel(MWebBaseModel):
     __abstract__ = True
-    id: int = mweb_orm.Column("id", mweb_orm.BigInteger().with_variant(mweb_orm.Integer(), "sqlite"), primary_key=True, autoincrement=True, nullable=False)
+    id: int = mweb_orm.Column("id", mweb_orm.BigInteger(), primary_key=True, autoincrement=True, nullable=False)
 
 
 class MWebDatedModel(MWebIDModel):

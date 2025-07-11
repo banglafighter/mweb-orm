@@ -92,7 +92,7 @@ class MWebORMProps:
         return Text()
 
     def BigInteger(self):
-        return BigInteger()
+        return BigInteger().with_variant(self.Integer(), "sqlite")
 
     def SmallInteger(self):
         return SmallInteger()
