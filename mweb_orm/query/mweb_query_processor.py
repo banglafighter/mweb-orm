@@ -46,7 +46,7 @@ class MWebQueryProcessor:
         self._offset = value
         return self
 
-    def _assemble_and_get_query(self, query=None):
+    def _assemble_and_get_query(self, query=None, paginate: bool = True):
         if query is None:
             query = sa_select(*(self._fields if self._fields else [self.model]))
 
@@ -66,10 +66,10 @@ class MWebQueryProcessor:
         if self._order_by:
             query = query.order_by(*self._order_by)
 
-        if self._limit is not None:
+        if self._limit is not None and paginate:
             query = query.limit(self._limit)
 
-        if self._offset is not None:
+        if self._offset is not None and paginate:
             query = query.offset(self._offset)
 
         return query
@@ -137,9 +137,9 @@ class MWebQueryProcessor:
 
         if count:
             count_query = sa_select(func.count()).select_from(self.model)
-            count_query = self._assemble_and_get_query(query=count_query)
+            count_query = self._assemble_and_get_query(query=count_query, paginate=False)
             count_result = await self._execute(query=count_query)
-            total = count_result.scalar_one()
+            total = count_result.scalar_one_or_none()
             total_pages = (
                 1 if item_per_page == -1 else ceil(total / item_per_page) if total else 1
             )
