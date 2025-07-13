@@ -1,13 +1,16 @@
 from mw_common.mw_exception import MwException
 from mweb.engine.mweb_registry import MWebRegistry
-from mweb_orm.common.mweb_orm_connector import MWebTenantResolver
-from mweb_orm.common.mweb_orm_hook import MWebORMHook
 from mweb_orm.model.mweb_master_model import MWebMasterModel
 from mweb_orm.orm.mweb_orm_data import DBConnectionData
 
 
 class MWebORMActions:
     connection_data: dict[str, DBConnectionData] = {}
+
+    @property
+    def hook(self):
+        from mweb.engine.mweb_hook import MWebHook
+        return MWebHook
 
     def get_model_db_key(self, model_class, default=None):
         return getattr(model_class, '__db_key__', default)
@@ -35,7 +38,7 @@ class MWebORMActions:
             connection_data = connection
 
         # Resolve SaaS Database Connection
-        tenant_resolver: MWebTenantResolver = MWebORMHook.get_tenant_resolver()
+        tenant_resolver = self.hook.tenant_resolver()
         if tenant_resolver is not None and MWebRegistry.config.ENABLE_SAAS:
             connection_data = tenant_resolver.get_db_connection_data(db_key=db_key, default_connection=connection)
 
