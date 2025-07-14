@@ -5,7 +5,7 @@ from mweb.engine.mweb_cli import MWebCLI
 from mweb_orm.orm.mweb_orm import mweb_orm
 
 mweb_orm_cli = MWebCLI(name="db", help_text="MWeb Database Manipulation Interface")
-_orm_mweb_app: MWebBase = None
+_orm_mweb_app: MWebBase | None = None
 
 
 @mweb_orm_cli.command("init", help="Initialize database models")
