@@ -7,6 +7,7 @@ from sqlalchemy.orm import MappedColumn, relationship
 from sqlalchemy.orm.interfaces import _AttributeOptions
 from sqlalchemy.sql.base import _NoArg
 from sqlalchemy.sql.functions import _FunctionGenerator
+from mweb_orm.orm.mweb_orm_fields import JSONType
 
 LazyLoadType = Literal[
     "select",
@@ -96,6 +97,9 @@ class MWebORMProps:
 
     def SmallInteger(self):
         return SmallInteger()
+
+    def JSON(self):
+        return JSONType()
 
     def ForeignKey(self, column, onupdate: str = None, ondelete: str = None, name=None):
         return ForeignKey(column, onupdate=onupdate, ondelete=ondelete, name=name)
