@@ -52,7 +52,7 @@ class MWebMasterModel(DeclarativeBase, MappedAsDataclass):
         if should_set_tablename(cls):
             cls.__tablename__ = camel_to_snake_case(cls.__name__)
 
-        super().__init_subclass__(**kwargs)
+        super().__init_subclass__(kw_only=True, **kwargs)
         cls.__repr__ = MWebMasterModel.__repr__
 
     def __repr__(self) -> str:
