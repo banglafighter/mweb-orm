@@ -1,4 +1,6 @@
 from math import ceil
+from sqlalchemy.inspection import inspect as sa_inspect
+from sqlalchemy.orm import joinedload, selectinload, subqueryload, noload, immediateload, raiseload
 from sqlalchemy import select as sa_select, func, update as sa_update, delete as sa_delete
 from mw_common.mw_exception import MwException
 from mweb_orm.common import Pagination
@@ -46,6 +48,30 @@ class MWebQueryProcessor:
         self._offset = value
         return self
 
+    def _get_loading_options(self):
+        mapper = sa_inspect(self.model)
+        options = []
+
+        for rel in mapper.relationships:
+            attr = getattr(self.model, rel.key)
+            lazy = rel.lazy
+
+            if lazy == "joined":
+                options.append(joinedload(attr))
+            elif lazy == "selectin":
+                options.append(selectinload(attr))
+            elif lazy == "subquery":
+                options.append(subqueryload(attr))
+            elif lazy == "noload":
+                options.append(noload(attr))
+            elif lazy == "immediate":
+                options.append(immediateload(attr))
+            elif lazy == "raise":
+                options.append(raiseload(attr))
+            # "select" is default lazy and doesn't need explicit load
+
+        return options
+
     def _assemble_and_get_query(self, query=None, paginate: bool = True):
         if query is None:
             query = sa_select(*(self._fields if self._fields else [self.model]))
@@ -71,6 +97,10 @@ class MWebQueryProcessor:
 
         if self._offset is not None and paginate:
             query = query.offset(self._offset)
+
+        loading_options = self._get_loading_options()
+        if loading_options:
+            query = query.options(*loading_options)
 
         return query
 
