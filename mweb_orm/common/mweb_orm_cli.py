@@ -31,6 +31,7 @@ async def _drop_async():
 
 def register_mweb_orm_cli(mweb_app: MWebBase, config: MWebConfig):
     global _identity_cli_mweb_app
+    _identity_cli_mweb_app = mweb_app
     _orm_mweb_app = mweb_app
     if mweb_app is not None:
         mweb_app.cli.add_command(mweb_orm_cli)
