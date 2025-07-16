@@ -1,9 +1,10 @@
-from mweb import MWebBase, MWebConfig
+from mweb import MWebBase, MWebConfig, Response
 from mweb.engine.mweb_hook import MWebHook
 from mweb.engine.mweb_util import MWebUtil
 from mweb_orm.common.mweb_orm_cli import register_mweb_orm_cli
 from mweb_orm.common.mweb_orm_config import MWebORMConfig
 from mweb_orm.common.mweb_orm_hook import MWebORMHook
+
 
 
 class MWebORMModule:
@@ -14,3 +15,9 @@ class MWebORMModule:
 
         register_mweb_orm_cli(mweb_app=mweb_app, config=config)
 
+        mweb_app.after_request_funcs.setdefault(None, []).append(self.close_orm_session)
+
+    async def close_orm_session(self, response: Response):
+        from mweb_orm.orm import mweb_orm
+        await mweb_orm.close_session()
+        return response
