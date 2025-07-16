@@ -6,5 +6,5 @@ class MWebORMUtil:
     def enum_to_string(data: dict, name):
         value = DataUtil.dict_value(data, name)
         if value is not None:
-            data[name] = value
+            data[name] = str(value)
         return data
