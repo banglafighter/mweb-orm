@@ -3,6 +3,7 @@ from sqlalchemy import (
     Integer, String, Boolean, DateTime, Date, Float, Text, BigInteger, Time, SmallInteger,
     ForeignKey, func
 )
+from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import MappedColumn, relationship
 from sqlalchemy.orm.interfaces import _AttributeOptions
 from sqlalchemy.sql.base import _NoArg
@@ -90,7 +91,7 @@ class MWebORMProps:
         return Float()
 
     def Text(self):
-        return Text()
+        return Text().with_variant(LONGTEXT, "mysql")
 
     def BigInteger(self):
         return BigInteger().with_variant(self.Integer(), "sqlite")
