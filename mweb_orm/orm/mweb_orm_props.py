@@ -21,9 +21,6 @@ LazyLoadType = Literal[
     "immediate",
     "write_only",
     "dynamic",
-    True,
-    False,
-    None,
 ]
 
 class MWebORMProps:
