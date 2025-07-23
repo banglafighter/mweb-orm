@@ -105,8 +105,15 @@ class MWebORMProps:
 
     def Relationship(self, argument, viewonly: bool = False, lazy: LazyLoadType = "joined", order_by: str | bool = False, uselist: bool = False, primaryjoin: Optional[_RelationshipJoinConditionArgument] = None, remote_side: str = None, backref: str = None, secondaryjoin: Optional[_RelationshipJoinConditionArgument] = None, back_populates: str = None):
         return relationship(
-            argument=argument, viewonly=viewonly, lazy=lazy, order_by=order_by, uselist=uselist,
-            primaryjoin=primaryjoin, remote_side=remote_side, backref=backref, back_populates=back_populates,
+            argument=argument,
+            viewonly=viewonly,
+            lazy=lazy,
+            order_by=order_by,
+            uselist=uselist,
+            primaryjoin=primaryjoin,
+            remote_side=remote_side,
+            backref=backref,
+            back_populates=back_populates,
             secondaryjoin=secondaryjoin
         )
 

@@ -98,9 +98,9 @@ class MWebQueryProcessor:
         if self._offset is not None and paginate:
             query = query.offset(self._offset)
 
-        # loading_options = self._get_loading_options()
-        # if loading_options:
-        #     query = query.options(*loading_options)
+        loading_options = self._get_loading_options()
+        if loading_options:
+            query = query.options(*loading_options)
 
         return query
 
