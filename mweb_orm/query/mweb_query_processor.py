@@ -1,6 +1,6 @@
 from math import ceil
 from sqlalchemy.inspection import inspect as sa_inspect
-from sqlalchemy.orm import joinedload, selectinload, subqueryload, noload, immediateload, raiseload
+from sqlalchemy.orm import joinedload, selectinload, subqueryload, noload, immediateload, raiseload, QueryableAttribute
 from sqlalchemy import select as sa_select, func, update as sa_update, delete as sa_delete
 from mw_common.mw_exception import MwException
 from mweb_orm.common import Pagination
@@ -98,10 +98,6 @@ class MWebQueryProcessor:
         if self._offset is not None and paginate:
             query = query.offset(self._offset)
 
-        loading_options = self._get_loading_options()
-        if loading_options:
-            query = query.options(*loading_options)
-
         return query
 
     async def _execute(self, query):
@@ -119,8 +115,20 @@ class MWebQueryProcessor:
         except Exception as e:
             raise MwException(e)
 
+    def _add_loading_options(self, query):
+        if self._fields:
+            return query
+
+        loading_options = self._get_loading_options()
+        if loading_options:
+            query = query.options(*loading_options)
+
+        return query
+
+
     async def read_all(self):
         query = self._assemble_and_get_query()
+        query = self._add_loading_options(query)
         result = await self._execute(query=query)
         if self._fields:
             return result.all()
@@ -129,6 +137,7 @@ class MWebQueryProcessor:
 
     async def first(self):
         query = self._assemble_and_get_query()
+        query = self._add_loading_options(query)
         query = query.limit(1)
         result = await self._execute(query=query)
         if self._fields:
@@ -154,6 +163,7 @@ class MWebQueryProcessor:
             self._offset = (page - 1) * item_per_page
 
         query = self._assemble_and_get_query()
+        query = self._add_loading_options(query)
         result = await self._execute(query=query)
 
         items = (
