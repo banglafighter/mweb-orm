@@ -16,8 +16,10 @@ class MWebORM(MWebORMProps, MWebORMActions):
         self.connection_data: dict[str, DBConnectionData] = {}
 
     def get_engine(self, db_key: str = None):
-        connection_data: DBConnectionData = self.get_engine_connection_data(db_key=db_key)
+        if db_key in self._engines:
+            return self._engines[db_key]
 
+        connection_data: DBConnectionData = self.get_engine_connection_data(db_key=db_key)
         if connection_data is None:
             raise MwException("Database connection configuration not found!")
 
@@ -31,6 +33,8 @@ class MWebORM(MWebORMProps, MWebORMActions):
             pool_recycle=connection_data.poolRecycle,
             future=connection_data.future,
         )
+
+        self._engines[db_key] = engine
         return engine
 
     def get_session_maker(self, db_key: str = None):
@@ -52,10 +56,13 @@ class MWebORM(MWebORMProps, MWebORMActions):
         return session
 
     async def close_session(self):
-        session = _orm_session_context.get()
-        if session:
-            await session.close()
-        _orm_session_context.set(None)
+        try:
+            session = _orm_session_context.get()
+            if session:
+                await session.close()
+            _orm_session_context.set(None)
+        except:
+            Console.error("Unable to close session")
 
     async def _create_drop_model_by_data(self, db_key: str, models, action: str = "create"):
         from mweb_orm.model.mweb_master_model import MWebMasterModel  # Added Inside Method for avoid circular import

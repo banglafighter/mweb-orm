@@ -1,3 +1,4 @@
+from sqlalchemy.ext.asyncio import AsyncEngine
 from mw_common.mw_exception import MwException
 from mweb.engine.mweb_registry import MWebRegistry
 from mweb_orm.model.mweb_master_model import MWebMasterModel
@@ -6,6 +7,7 @@ from mweb_orm.orm.mweb_orm_data import DBConnectionData
 
 class MWebORMActions:
     connection_data: dict[str, DBConnectionData] = {}
+    _engines: dict[str, AsyncEngine] = {}
 
     @property
     def hook(self):
