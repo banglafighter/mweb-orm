@@ -9,6 +9,7 @@ from sqlalchemy.orm.interfaces import _AttributeOptions
 from sqlalchemy.sql.base import _NoArg
 from sqlalchemy.sql.functions import _FunctionGenerator
 from mweb_orm.orm.mweb_orm_fields import JSONType
+from sqlalchemy.orm.relationships import _RelationshipJoinConditionArgument
 
 LazyLoadType = Literal[
     "select",
@@ -102,10 +103,11 @@ class MWebORMProps:
     def ForeignKey(self, column, onupdate: str = None, ondelete: str = None, name=None):
         return ForeignKey(column, onupdate=onupdate, ondelete=ondelete, name=name)
 
-    def Relationship(self, argument, viewonly: bool = False, lazy: LazyLoadType = "joined", order_by: str | bool = False, uselist: bool = False, primaryjoin: str = None, remote_side: str = None, backref: str = None, back_populates: str = None):
+    def Relationship(self, argument, viewonly: bool = False, lazy: LazyLoadType = "joined", order_by: str | bool = False, uselist: bool = False, primaryjoin: Optional[_RelationshipJoinConditionArgument] = None, remote_side: str = None, backref: str = None, secondaryjoin: Optional[_RelationshipJoinConditionArgument] = None, back_populates: str = None):
         return relationship(
             argument=argument, viewonly=viewonly, lazy=lazy, order_by=order_by, uselist=uselist,
             primaryjoin=primaryjoin, remote_side=remote_side, backref=backref, back_populates=back_populates,
+            secondaryjoin=secondaryjoin
         )
 
     @property
