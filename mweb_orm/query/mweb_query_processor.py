@@ -155,6 +155,7 @@ class MWebQueryProcessor:
     async def count(self):
         query = sa_select(func.count()).select_from(self.model)
         query = self._assemble_and_get_query(query=query)
+        query = query.order_by(None)
         result = await self._execute(query=query)
         return result.scalar_one()
 
@@ -185,6 +186,7 @@ class MWebQueryProcessor:
         if count:
             count_query = sa_select(func.count()).select_from(self.model)
             count_query = self._assemble_and_get_query(query=count_query, paginate=False)
+            count_query = count_query.order_by(None)
             count_result = await self._execute(query=count_query)
             total = count_result.scalar_one_or_none()
             total_pages = (
