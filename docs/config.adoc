@@ -1,3 +1,44 @@
 
-
+== Mysql
+```
+pip install asyncmy
+```
+* env.yml
+```
 DB_CONNECTION_URI: "mysql+asyncmy://user:password@host/dbname"
+```
+
+
+
+== PostgreSQL
+```
+pip install asyncpg
+```
+* env.yml
+```yaml
+DB_CONNECTION_URI: "postgresql+asyncpg://username:password@host:port/dbname"
+
+# Example
+DB_CONNECTION_URI: "postgresql+asyncpg://mweb:mweb12#@localhost/mweb_app_db"
+```
+
+* Manage Database
+** Username: `mweb`
+** Password: `mweb12#`
+** DB Name: `mweb_app_db`
+```sql
+-- If already User Exist
+DROP OWNED BY mweb;
+DROP USER mweb;
+
+-- Create User
+CREATE USER mweb WITH PASSWORD 'mweb12#';
+
+
+-- Drop Database if already exist
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'mweb_app_db';
+DROP DATABASE mweb_app_db;
+
+-- Create Database
+CREATE DATABASE mweb_app_db WITH OWNER mweb ENCODING 'UTF8' LC_COLLATE 'en_US.UTF-8' LC_CTYPE 'en_US.UTF-8' TEMPLATE template0;
+```
