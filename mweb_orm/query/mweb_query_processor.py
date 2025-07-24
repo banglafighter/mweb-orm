@@ -20,6 +20,13 @@ class MWebQueryProcessor:
         self._limit = None
         self._offset = None
 
+    def select(self, *fields):
+        if not self._fields:
+            self._fields = list(fields)
+        else:
+            self._fields.extend(fields)
+        return self
+
     def where(self, *conditions):
         self._filters.extend(conditions)
         return self
