@@ -27,6 +27,9 @@ DB_CONNECTION_URI: "postgresql+asyncpg://mweb:mweb12#@localhost/mweb_app_db"
 ** Password: `mweb12#`
 ** DB Name: `mweb_app_db`
 ```sql
+-- Login to postgres
+psql -U postgres
+
 -- If already User Exist
 DROP OWNED BY mweb;
 DROP USER mweb;
