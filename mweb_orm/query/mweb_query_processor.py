@@ -55,6 +55,17 @@ class MWebQueryProcessor:
         self._offset = value
         return self
 
+    def scalar_subquery(self):
+        """
+        Returns the query as a scalar subquery.
+        Useful for IN / NOT IN / EXISTS clauses.
+        """
+        if not self._fields or len(self._fields) != 1:
+            raise MwException("scalar_subquery() requires exactly one selected field.")
+
+        query = self._assemble_and_get_query()
+        return query.scalar_subquery()
+
     def _get_loading_options(self):
         mapper = sa_inspect(self.model)
         options = []
