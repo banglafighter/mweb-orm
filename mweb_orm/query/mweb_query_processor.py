@@ -19,12 +19,17 @@ class MWebQueryProcessor:
         self._joins = []
         self._limit = None
         self._offset = None
+        self._distinct = False
 
     def select(self, *fields):
         if not self._fields:
             self._fields = list(fields)
         else:
             self._fields.extend(fields)
+        return self
+
+    def distinct(self):
+        self._distinct = True
         return self
 
     def where(self, *conditions):
@@ -93,6 +98,9 @@ class MWebQueryProcessor:
     def _assemble_and_get_query(self, query=None, paginate: bool = True):
         if query is None:
             query = sa_select(*(self._fields if self._fields else [self.model]))
+
+        if self._distinct:
+            query = query.distinct()
 
         if self._filters:
             query = query.where(*self._filters)
