@@ -20,7 +20,7 @@ class JSONType(TypeDecorator):
         """Convert Python object to JSON string if necessary."""
         if value is None:
             return None
-        if dialect.name not in {"postgresql", "mysql", "sqlite"}:
+        if dialect.name not in {"postgresql"}:
             return json.dumps(value)  # Convert to text format
         return value  # Store as JSON/JSONB directly
 
@@ -28,6 +28,6 @@ class JSONType(TypeDecorator):
         """Convert JSON string back to Python object when fetching data."""
         if value is None:
             return None
-        if dialect.name not in {"postgresql", "mysql", "sqlite"}:
+        if dialect.name not in {"postgresql"}:
             return json.loads(value)  # Convert text to JSON
         return value  # Already in JSON format
