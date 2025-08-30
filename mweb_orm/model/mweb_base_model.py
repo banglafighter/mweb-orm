@@ -31,6 +31,7 @@ class MWebBaseModel(MWebMasterModel):
                     self.before_save()
                     session.add(self)
                     await session.flush()
+                    await session.refresh(self)
                     self.after_save()
                     if commit:
                         await session.commit()
