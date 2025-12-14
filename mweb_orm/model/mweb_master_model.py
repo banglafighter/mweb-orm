@@ -45,7 +45,7 @@ def should_set_tablename(cls: type) -> bool:
     return True
 
 
-class MWebMasterModel(DeclarativeBase, MappedAsDataclass):
+class MWebMasterModel(MappedAsDataclass, DeclarativeBase):
     __abstract__ = True
 
     def __init_subclass__(cls, **kwargs):

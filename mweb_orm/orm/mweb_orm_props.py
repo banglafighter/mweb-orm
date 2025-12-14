@@ -1,12 +1,10 @@
-from typing import Optional, Any, Literal, Union
+from typing import Optional, Any, Literal
 from sqlalchemy import (
     Integer, String, Boolean, DateTime, Date, Float, Text, BigInteger, Time, SmallInteger,
     ForeignKey, func
 )
 from sqlalchemy.dialects.mysql import LONGTEXT
-from sqlalchemy.orm import MappedColumn, relationship
-from sqlalchemy.orm.interfaces import _AttributeOptions
-from sqlalchemy.sql.base import _NoArg
+from sqlalchemy.orm import relationship, mapped_column, MappedColumn
 from sqlalchemy.sql.functions import _FunctionGenerator
 from mweb_orm.orm.mweb_orm_fields import JSONType
 from sqlalchemy.orm.relationships import _RelationshipJoinConditionArgument
@@ -26,46 +24,92 @@ LazyLoadType = Literal[
 
 class MWebORMProps:
 
-    def Column(self,
-               name: str,
-               data_type,
-               primary_key: bool = False,
-               foreign_key: ForeignKey = None,
-               autoincrement: bool = False,
-               nullable: bool = True,
-               unique: bool = None,
-               index: bool = None,
-               default: Optional[Any] = _NoArg.NO_ARG,
-               init: Union[_NoArg, bool] = _NoArg.NO_ARG,
-               onupdate=None,
-               **kw: Any,
-               ) -> MappedColumn:
-
-        argument_list = []
+    # TODO: Implement due to various error, will check extensively later on
+    def Column(
+            self,
+            name: str,
+            data_type,
+            primary_key: bool = False,
+            foreign_key: ForeignKey | None = None,
+            autoincrement: bool = False,
+            nullable: bool = True,
+            unique: bool | None = None,
+            index: bool | None = None,
+            default: Any = None,
+            init: bool | None = None,
+            onupdate=None,
+            **kw: Any,
+    ) -> MappedColumn:
+        args = []
         if foreign_key is not None:
-            argument_list.append(foreign_key)
-        argument = tuple(argument_list)
+            args.append(foreign_key)
 
-        # Don't know the usages that's why not adding as params
-        default_factory = _NoArg.NO_ARG
-        repr = _NoArg.NO_ARG
-        compare = _NoArg.NO_ARG
-        kw_only = True
-        hash = _NoArg.NO_ARG
+        if init is None:
+            if nullable or autoincrement:
+                init = False
+            else:
+                init = True
 
-        if (nullable == True or autoincrement == True) and init == _NoArg.NO_ARG:
-            init = False
-
-        return MappedColumn(
-            *argument,
-            name=name, type_=data_type, primary_key=primary_key, index=index,
-            unique=unique, default=default, autoincrement=autoincrement, nullable=nullable,
+        return mapped_column(
+            *args,
+            name=name,
+            type_=data_type,
+            primary_key=primary_key,
+            autoincrement=autoincrement,
+            nullable=nullable,
+            unique=unique,
+            index=index,
+            default=default,
             onupdate=onupdate,
-            attribute_options=_AttributeOptions(
-                init, repr, default, default_factory, compare, kw_only, hash
-            ),
+
+            # ORM / dataclass-safe
+            init=init,
+            kw_only=True,
+
             **kw,
         )
+
+    # TODO: Need to verify the code later
+    # def Column(self,
+    #            name: str,
+    #            data_type,
+    #            primary_key: bool = False,
+    #            foreign_key: ForeignKey = None,
+    #            autoincrement: bool = False,
+    #            nullable: bool = True,
+    #            unique: bool = None,
+    #            index: bool = None,
+    #            default: Optional[Any] = _NoArg.NO_ARG,
+    #            init: Union[_NoArg, bool] = _NoArg.NO_ARG,
+    #            onupdate=None,
+    #            **kw: Any,
+    #            ) -> MappedColumn:
+    #
+    #     argument_list = []
+    #     if foreign_key is not None:
+    #         argument_list.append(foreign_key)
+    #     argument = tuple(argument_list)
+    #
+    #     # Don't know the usages that's why not adding as params
+    #     default_factory = _NoArg.NO_ARG
+    #     repr = _NoArg.NO_ARG
+    #     compare = _NoArg.NO_ARG
+    #     kw_only = True
+    #     hash = _NoArg.NO_ARG
+    #
+    #     if (nullable == True or autoincrement == True) and init == _NoArg.NO_ARG:
+    #         init = False
+    #
+    #     return MappedColumn(
+    #         *argument,
+    #         name=name, type_=data_type, primary_key=primary_key, index=index,
+    #         unique=unique, default=default, autoincrement=autoincrement, nullable=nullable,
+    #         onupdate=onupdate,
+    #         attribute_options=_AttributeOptions(
+    #             init, repr, default, default_factory, compare, kw_only, hash
+    #         ),
+    #         **kw,
+    #     )
 
     def Integer(self):
         return Integer()
