@@ -1,8 +1,7 @@
 import asyncio
-from mw_common.mw_console_log import Console
-from mweb import MWebBase, MWebConfig
-from mweb.engine.mweb_cli import MWebCLI
-from mweb_orm.orm.mweb_orm import mweb_orm
+from mw_common import Console
+from mweb import MWebBase, MWebConfig, MWebCLI
+from ..orm.mweb_orm import mweb_orm
 
 mweb_orm_cli = MWebCLI(name="db", help_text="MWeb Database Manipulation Interface")
 _identity_cli_mweb_app: MWebBase | None = None

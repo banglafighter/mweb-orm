@@ -6,7 +6,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import relationship, mapped_column, MappedColumn
 from sqlalchemy.sql.functions import _FunctionGenerator
-from mweb_orm.orm.mweb_orm_fields import JSONType
+from .mweb_orm_fields import JSONType
 from sqlalchemy.orm.relationships import _RelationshipJoinConditionArgument
 
 LazyLoadType = Literal[

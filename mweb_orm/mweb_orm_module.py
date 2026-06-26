@@ -1,9 +1,7 @@
-from mweb import MWebBase, MWebConfig, Response
-from mweb.engine.mweb_hook import MWebHook
-from mweb.engine.mweb_util import MWebUtil
-from mweb_orm.common.mweb_orm_cli import register_mweb_orm_cli
-from mweb_orm.common.mweb_orm_config import MWebORMConfig
-from mweb_orm.common.mweb_orm_hook import MWebORMHook
+from mweb import MWebBase, MWebConfig, Response, MWebHook, MWebUtil
+from .common.mweb_orm_cli import register_mweb_orm_cli
+from .common.mweb_orm_config import MWebORMConfig
+from .common.mweb_orm_hook import MWebORMHook
 
 
 

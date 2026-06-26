@@ -1,12 +1,11 @@
-from mw_common.mw_console_log import Console
-from mw_common.mw_exception import MwException
+from mw_common import Console, MwException
 from mweb.engine.mweb_registry import MWebRegistry
-from mweb_orm.orm.mweb_orm_actions import MWebORMActions
-from mweb_orm.orm.mweb_orm_data import DBConnectionData
+from .mweb_orm_actions import MWebORMActions
+from .mweb_orm_data import DBConnectionData
+from .mweb_orm_props import MWebORMProps
 from contextvars import ContextVar
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from mweb_orm.orm.mweb_orm_props import MWebORMProps
 
 
 _orm_session_context: ContextVar[Optional[AsyncSession]] = ContextVar("orm_session_context", default=None)

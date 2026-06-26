@@ -1,9 +1,9 @@
 from typing import TypeVar, Type
 from sqlalchemy import inspect
-from mw_common.mw_exception import MwException
-from mweb_orm.model.mweb_master_model import MWebMasterModel
-from mweb_orm.orm import mweb_orm
-from mweb_orm.query import MWebQueryProcessor, MWebPropsQueryProcessor
+from mw_common import MwException
+from .mweb_master_model import MWebMasterModel
+from ..orm import mweb_orm
+from ..query import MWebQueryProcessor, MWebPropsQueryProcessor
 
 T = TypeVar("T", bound="MWebBaseModel")
 

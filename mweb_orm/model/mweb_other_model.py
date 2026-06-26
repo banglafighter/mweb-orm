@@ -1,7 +1,7 @@
 from datetime import datetime
 from mw_common import MwUtil
-from mweb_orm.model.mweb_base_model import MWebBaseModel
-from mweb_orm.orm.mweb_orm import mweb_orm
+from ..model.mweb_base_model import MWebBaseModel
+from ..orm.mweb_orm import mweb_orm
 
 
 class MWebIDModel(MWebBaseModel):

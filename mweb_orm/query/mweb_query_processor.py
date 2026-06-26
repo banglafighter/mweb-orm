@@ -2,9 +2,9 @@ from math import ceil
 from sqlalchemy.inspection import inspect as sa_inspect
 from sqlalchemy.orm import joinedload, selectinload, subqueryload, noload, immediateload, raiseload, QueryableAttribute
 from sqlalchemy import select as sa_select, func, update as sa_update, delete as sa_delete
-from mw_common.mw_exception import MwException
-from mweb_orm.common import Pagination
-from mweb_orm.orm import mweb_orm
+from mw_common import MwException
+from ..common import Pagination
+from ..orm import mweb_orm
 
 
 class MWebQueryProcessor:
