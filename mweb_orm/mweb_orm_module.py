@@ -16,6 +16,6 @@ class MWebORMModule:
         mweb_app.after_request_funcs.setdefault(None, []).append(self.close_orm_session)
 
     async def close_orm_session(self, response: Response):
-        from mweb_orm.orm import mweb_orm
+        from .orm.mweb_orm import mweb_orm
         await mweb_orm.close_session()
         return response

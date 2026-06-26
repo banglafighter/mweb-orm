@@ -4,6 +4,8 @@ from .model.mweb_other_model import MWebDatedModel
 from .model.mweb_other_model import MWebIDModel
 from .orm.mweb_orm import mweb_orm
 from .orm.mweb_orm_data import DBConnectionData
+from .query import MWebQueryProcessor
+from .common import Pagination
 from sqlalchemy import and_ as sa_and_, or_ as sa_or_, func as sa_func
 from sqlalchemy.orm import make_transient as sa_make_transient
 
@@ -15,6 +17,8 @@ orm = mweb_orm
 
 __all__ = [
     "orm",
+    "MWebQueryProcessor",
+    "Pagination",
     "DBConnectionData",
     "mweb_orm",
     "and_",

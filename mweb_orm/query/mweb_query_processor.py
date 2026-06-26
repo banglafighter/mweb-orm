@@ -4,7 +4,7 @@ from sqlalchemy.orm import joinedload, selectinload, subqueryload, noload, immed
 from sqlalchemy import select as sa_select, func, update as sa_update, delete as sa_delete
 from mw_common import MwException
 from ..common import Pagination
-from ..orm import mweb_orm
+from ..orm.mweb_orm import mweb_orm
 
 
 class MWebQueryProcessor:
