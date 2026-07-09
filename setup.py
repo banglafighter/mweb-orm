@@ -9,7 +9,7 @@ env = os.environ.get('source')
 
 
 def get_dependencies():
-    dependency = ["aiosqlite==0.21.0", "SQLAlchemy==2.0.41"]
+    dependency = ["aiosqlite==0.21.0", "SQLAlchemy==2.0.51"]
 
     if env and env == "code":
         return dependency
