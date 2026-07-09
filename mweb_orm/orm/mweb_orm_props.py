@@ -1,8 +1,5 @@
 from typing import Optional, Any, Literal
-from sqlalchemy import (
-    Integer, String, Boolean, DateTime, Date, Float, Text, BigInteger, Time, SmallInteger,
-    ForeignKey, func
-)
+import sqlalchemy as sa
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import relationship, mapped_column, MappedColumn
 from sqlalchemy.sql.functions import _FunctionGenerator
@@ -21,6 +18,7 @@ LazyLoadType = Literal[
     "write_only",
     "dynamic",
 ]
+
 
 class MWebORMProps:
 
@@ -69,85 +67,58 @@ class MWebORMProps:
             **kw,
         )
 
-    # TODO: Need to verify the code later
-    # def Column(self,
-    #            name: str,
-    #            data_type,
-    #            primary_key: bool = False,
-    #            foreign_key: ForeignKey = None,
-    #            autoincrement: bool = False,
-    #            nullable: bool = True,
-    #            unique: bool = None,
-    #            index: bool = None,
-    #            default: Optional[Any] = _NoArg.NO_ARG,
-    #            init: Union[_NoArg, bool] = _NoArg.NO_ARG,
-    #            onupdate=None,
-    #            **kw: Any,
-    #            ) -> MappedColumn:
-    #
-    #     argument_list = []
-    #     if foreign_key is not None:
-    #         argument_list.append(foreign_key)
-    #     argument = tuple(argument_list)
-    #
-    #     # Don't know the usages that's why not adding as params
-    #     default_factory = _NoArg.NO_ARG
-    #     repr = _NoArg.NO_ARG
-    #     compare = _NoArg.NO_ARG
-    #     kw_only = True
-    #     hash = _NoArg.NO_ARG
-    #
-    #     if (nullable == True or autoincrement == True) and init == _NoArg.NO_ARG:
-    #         init = False
-    #
-    #     return MappedColumn(
-    #         *argument,
-    #         name=name, type_=data_type, primary_key=primary_key, index=index,
-    #         unique=unique, default=default, autoincrement=autoincrement, nullable=nullable,
-    #         onupdate=onupdate,
-    #         attribute_options=_AttributeOptions(
-    #             init, repr, default, default_factory, compare, kw_only, hash
-    #         ),
-    #         **kw,
-    #     )
-
     def Integer(self):
-        return Integer()
+        return sa.Integer()
 
     def String(self, length: Optional[int] = None, collation: Optional[str] = None):
-        return String(length=length, collation=collation)
+        return sa.String(length=length, collation=collation)
 
     def Boolean(self, create_constraint: bool = False, name: Optional[str] = None):
-        return Boolean(create_constraint=create_constraint, name=name)
+        return sa.Boolean(create_constraint=create_constraint, name=name)
 
     def DateTime(self):
-        return DateTime()
+        return sa.DateTime()
 
     def Date(self):
-        return Date()
+        return sa.Date()
 
     def Time(self):
-        return Time()
+        return sa.Time()
 
     def Float(self):
-        return Float()
+        return sa.Float()
 
     def Text(self):
-        return Text().with_variant(LONGTEXT, "mysql")
+        return sa.Text().with_variant(LONGTEXT, "mysql")
 
     def BigInteger(self):
-        return BigInteger().with_variant(self.Integer(), "sqlite")
+        return sa.BigInteger().with_variant(self.Integer(), "sqlite")
 
     def SmallInteger(self):
-        return SmallInteger()
+        return sa.SmallInteger()
 
     def JSON(self):
         return JSONType()
 
-    def ForeignKey(self, column, onupdate: str = None, ondelete: str = None, name=None):
-        return ForeignKey(column, onupdate=onupdate, ondelete=ondelete, name=name)
+    def UUID(self, as_uuid: bool = True):
+        return sa.UUID(as_uuid=as_uuid)
 
-    def Relationship(self, argument, viewonly: bool = False, lazy: LazyLoadType = "joined", order_by: str | bool = False, uselist: bool = True, primaryjoin: Optional[_RelationshipJoinConditionArgument] = None, remote_side: str = None, backref: str = None, secondaryjoin: Optional[_RelationshipJoinConditionArgument] = None, back_populates: str = None):
+    def ForeignKey(self, column, onupdate: str | None = None, ondelete: str | None = None, name=None):
+        return sa.ForeignKey(column, onupdate=onupdate, ondelete=ondelete, name=name)
+
+    def Relationship(
+            self,
+            argument,
+            viewonly: bool = False,
+            lazy: LazyLoadType = "joined",
+            order_by: str | bool = False,
+            uselist: bool = True,
+            primaryjoin: Optional[_RelationshipJoinConditionArgument] = None,
+            remote_side: str | None = None,
+            backref: str | None = None,
+            secondaryjoin: Optional[_RelationshipJoinConditionArgument] = None,
+            back_populates: str | None = None
+    ):
         return relationship(
             argument=argument,
             viewonly=viewonly,
@@ -163,4 +134,4 @@ class MWebORMProps:
 
     @property
     def func(self) -> _FunctionGenerator:
-        return func
+        return sa.func
