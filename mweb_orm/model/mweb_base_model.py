@@ -82,24 +82,24 @@ class MWebBaseModel(MWebMasterModel):
     def is_saved(self) -> bool:
         return self.__was_saved
 
-    @classmethod
-    async def save_all(cls: Type[T], models: list[T], commit: bool = True):
-        try:
-            async with await mweb_orm.get_session() as session:
-                async with session.begin():
-                    for model in models:
-                        await model.before_save()
-                        session.add(model)
-                    await session.flush()
-
-                    for model in models:
-                        await model.after_save()
-                        model._set_save_status(model)
-
-                    if commit:
-                        await session.commit()
-        except Exception as e:
-            raise MwException(e)
+    # @classmethod
+    # async def save_all(cls: Type[T], models: list[T], commit: bool = True):
+    #     try:
+    #         async with await mweb_orm.get_session() as session:
+    #             async with session.begin():
+    #                 for model in models:
+    #                     await model.before_save()
+    #                     session.add(model)
+    #                 await session.flush()
+    #
+    #                 for model in models:
+    #                     await model.after_save()
+    #                     model._set_save_status(model)
+    #
+    #                 if commit:
+    #                     await session.commit()
+    #     except Exception as e:
+    #         raise MwException(e)
 
     def before_delete(self):
         """
@@ -113,17 +113,61 @@ class MWebBaseModel(MWebMasterModel):
         """
         return self
 
-    async def delete(self):
-        async with await mweb_orm.get_session() as session:
-            try:
-                self.before_delete()
-                session.delete(self)
-                await session.flush()
-                self.after_delete()
+    # async def delete(self):
+    #     async with await mweb_orm.get_session() as session:
+    #         try:
+    #             self.before_delete()
+    #             session.delete(self)
+    #             await session.flush()
+    #             self.after_delete()
+    #             await session.commit()
+    #         except Exception as e:
+    #             await session.rollback()
+    #             raise MwException(e)
+
+    @classmethod
+    async def save_all(cls: Type[T], models: list[T], commit: bool = True):
+        try:
+            session = await mweb_orm.get_session()
+            # If no transaction exists yet, start one safely
+            if not session.in_transaction():
+                await session.begin()
+
+            for model in models:
+                await model.before_save()
+                session.add(model)
+            await session.flush()
+
+            for model in models:
+                await model.after_save()
+                model._set_save_status(model)
+
+            # Only commit here if we started the transaction and commit=True
+            if commit:
                 await session.commit()
-            except Exception as e:
+        except Exception as e:
+            session = await mweb_orm.get_session()
+            if session.in_transaction():
                 await session.rollback()
-                raise MwException(e)
+            raise MwException(e)
+
+    async def delete(self):
+        try:
+            session = await mweb_orm.get_session()
+            if not session.in_transaction():
+                await session.begin()
+
+            self.before_delete()
+            await session.delete(self)
+            await session.flush()
+            self.after_delete()
+
+            await session.commit()
+        except Exception as e:
+            session = await mweb_orm.get_session()
+            if session.in_transaction():
+                await session.rollback()
+            raise MwException(e)
 
     query: MWebQueryProcessor = MWebPropsQueryProcessor()
 
