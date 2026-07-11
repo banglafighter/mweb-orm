@@ -11,34 +11,70 @@ class MWebBaseModel(MWebMasterModel):
     __abstract__ = True
     __was_saved = False
 
-    def before_save(self):
+    async def before_save(self):
         """
             This method is called before saving the data.
         """
         return self
 
-    def after_save(self):
+    async def after_save(self):
         """
             This method is called after saving the data.
         """
         return self
 
+    # TODO: Implemented using Gemini
     async def save(self, commit: bool = True):
         self.__was_saved = False
         try:
-            async with await mweb_orm.get_session() as session:
-                async with session.begin():
-                    self.before_save()
-                    session.add(self)
-                    await session.flush()
-                    await session.refresh(self)
-                    self.after_save()
-                    if commit:
-                        await session.commit()
-                    self._set_save_status(self)
+            session = await mweb_orm.get_session()
+
+            # If the session doesn't have an active transaction, start one cleanly
+            if not session.in_transaction():
+                await session.begin()
+
+            # 1. Run the hooks safely
+            await self.before_save()
+
+            # 2. Add and stage changes
+            session.add(self)
+            await session.flush()
+            await session.refresh(self)
+
+            # 3. Run post-save hooks
+            await self.after_save()
+
+            # 4. Commit if requested
+            if commit:
+                await session.commit()
+
+            self._set_save_status(self)
         except Exception as e:
+            # If anything goes wrong, rollback the transaction state cleanly
+            session = await mweb_orm.get_session()
+            if session.in_transaction():
+                await session.rollback()
             raise MwException(e)
+
         return self
+
+    # TODO: Previously implemented Method, without AI
+    # async def save(self, commit: bool = True):
+    #     self.__was_saved = False
+    #     try:
+    #         async with await mweb_orm.get_session() as session:
+    #             async with session.begin():
+    #                 await self.before_save()
+    #                 session.add(self)
+    #                 await session.flush()
+    #                 await session.refresh(self)
+    #                 await self.after_save()
+    #                 if commit:
+    #                     await session.commit()
+    #                 self._set_save_status(self)
+    #     except Exception as e:
+    #         raise MwException(e)
+    #     return self
 
     def _set_save_status(self, model):
         self.__was_saved = inspect(model).persistent
@@ -52,12 +88,12 @@ class MWebBaseModel(MWebMasterModel):
             async with await mweb_orm.get_session() as session:
                 async with session.begin():
                     for model in models:
-                        model.before_save()
+                        await model.before_save()
                         session.add(model)
                     await session.flush()
 
                     for model in models:
-                        model.after_save()
+                        await model.after_save()
                         model._set_save_status(model)
 
                     if commit:

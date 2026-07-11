@@ -126,20 +126,44 @@ class MWebQueryProcessor:
 
         return query
 
+    # TODO: Implemented using Gemini
     async def _execute(self, query):
         try:
-            async with await mweb_orm.get_session() as session:
-                return await session.execute(query)
+            session = await mweb_orm.get_session()
+            return await session.execute(query)
         except Exception as e:
             raise MwException(e)
 
     async def _begin_execute(self, query):
         try:
-            async with await mweb_orm.get_session() as session:
-                async with session.begin():
-                    return await session.execute(query)
+            session = await mweb_orm.get_session()
+            # If a transaction is already open (like inside .save()), don't force a new block
+            if session.in_transaction():
+                return await session.execute(query)
+
+            # Otherwise, open a self-contained transaction block for single updates/deletes
+            async with session.begin():
+                return await session.execute(query)
         except Exception as e:
             raise MwException(e)
+
+
+    # TODO: Previously implemented Method, without AI
+    # async def _execute(self, query):
+    #     try:
+    #         async with await mweb_orm.get_session() as session:
+    #             return await session.execute(query)
+    #     except Exception as e:
+    #         raise MwException(e)
+
+    # async def _begin_execute(self, query):
+    #     try:
+    #         async with await mweb_orm.get_session() as session:
+    #             async with session.begin():
+    #                 return await session.execute(query)
+    #     except Exception as e:
+    #         raise MwException(e)
+    #
 
     def _add_loading_options(self, query):
         if self._fields:
