@@ -28,7 +28,7 @@ class MWebORMProps:
             name: str,
             data_type,
             primary_key: bool = False,
-            foreign_key: ForeignKey | None = None,
+            foreign_key: sa.ForeignKey | None = None,
             autoincrement: bool = False,
             nullable: bool = True,
             unique: bool | None = None,
