@@ -26,37 +26,90 @@ class MWebBaseModel(MWebMasterModel):
     # TODO: Implemented using Gemini
     async def save(self, commit: bool = True):
         self.__was_saved = False
+        session = await mweb_orm.get_session()
         try:
-            session = await mweb_orm.get_session()
-
-            # If the session doesn't have an active transaction, start one cleanly
-            if not session.in_transaction():
+            # If a transaction is already active, use a sub-transaction (SAVEPOINT)
+            # This prevents validation queries from triggering a fatal database Autoflush crash
+            if session.in_transaction():
+                async with session.begin_nested():
+                    await self._execute_save_workflow(session)
+            else:
                 await session.begin()
-
-            # 1. Run the hooks safely
-            await self.before_save()
-
-            # 2. Add and stage changes
-            session.add(self)
-            await session.flush()
-            await session.refresh(self)
-
-            # 3. Run post-save hooks
-            await self.after_save()
-
-            # 4. Commit if requested
-            if commit:
-                await session.commit()
+                await self._execute_save_workflow(session)
+                if commit:
+                    await session.commit()
 
             self._set_save_status(self)
         except Exception as e:
-            # If anything goes wrong, rollback the transaction state cleanly
-            session = await mweb_orm.get_session()
             if session.in_transaction():
                 await session.rollback()
             raise MwException(e)
+        finally:
+            # Crucial step: Explicitly close/return the session to the pool
+            # This completely removes the "SAWarning: garbage collector..." pool leak error
+            await session.close()
 
         return self
+
+    async def _execute_save_workflow(self, session):
+        await self.before_save()
+        session.add(self)
+        await session.flush()
+        await session.refresh(self)
+        await self.after_save()
+
+    @classmethod
+    async def save_all(cls: Type[T], models: list[T], commit: bool = True):
+        session = await mweb_orm.get_session()
+        try:
+            if session.in_transaction():
+                async with session.begin_nested():
+                    await cls._execute_save_all_workflow(session, models)
+            else:
+                await session.begin()
+                await cls._execute_save_all_workflow(session, models)
+                if commit:
+                    await session.commit()
+        except Exception as e:
+            if session.in_transaction():
+                await session.rollback()
+            raise MwException(e)
+        finally:
+            await session.close()
+
+    @classmethod
+    async def _execute_save_all_workflow(cls, session, models: list[T]):
+        for model in models:
+            await model.before_save()
+            session.add(model)
+        await session.flush()
+
+        for model in models:
+            await model.after_save()
+            model._set_save_status(model)
+
+    async def delete(self):
+        session = await mweb_orm.get_session()
+        try:
+            if session.in_transaction():
+                async with session.begin_nested():
+                    await self._execute_delete_workflow(session)
+            else:
+                await session.begin()
+                await self._execute_delete_workflow(session)
+                await session.commit()
+        except Exception as e:
+            if session.in_transaction():
+                await session.rollback()
+            raise MwException(e)
+        finally:
+            await session.close()
+
+    async def _execute_delete_workflow(self, session):
+        self.before_delete()
+        await session.delete(self)
+        await session.flush()
+        self.after_delete()
 
     # TODO: Previously implemented Method, without AI
     # async def save(self, commit: bool = True):
@@ -124,50 +177,6 @@ class MWebBaseModel(MWebMasterModel):
     #         except Exception as e:
     #             await session.rollback()
     #             raise MwException(e)
-
-    @classmethod
-    async def save_all(cls: Type[T], models: list[T], commit: bool = True):
-        try:
-            session = await mweb_orm.get_session()
-            # If no transaction exists yet, start one safely
-            if not session.in_transaction():
-                await session.begin()
-
-            for model in models:
-                await model.before_save()
-                session.add(model)
-            await session.flush()
-
-            for model in models:
-                await model.after_save()
-                model._set_save_status(model)
-
-            # Only commit here if we started the transaction and commit=True
-            if commit:
-                await session.commit()
-        except Exception as e:
-            session = await mweb_orm.get_session()
-            if session.in_transaction():
-                await session.rollback()
-            raise MwException(e)
-
-    async def delete(self):
-        try:
-            session = await mweb_orm.get_session()
-            if not session.in_transaction():
-                await session.begin()
-
-            self.before_delete()
-            await session.delete(self)
-            await session.flush()
-            self.after_delete()
-
-            await session.commit()
-        except Exception as e:
-            session = await mweb_orm.get_session()
-            if session.in_transaction():
-                await session.rollback()
-            raise MwException(e)
 
     query: MWebQueryProcessor = MWebPropsQueryProcessor()
 
