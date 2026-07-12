@@ -100,7 +100,7 @@ class MWebORMProps:
     def JSON(self):
         return JSONType()
 
-    def UUID(self, as_uuid: bool = False):
+    def UUID(self, as_uuid: bool = True):
         return sa.UUID(as_uuid=as_uuid)
 
     def ForeignKey(self, column, onupdate: str | None = None, ondelete: str | None = None, name=None):
