@@ -126,50 +126,23 @@ class MWebQueryProcessor:
 
         return query
 
-    # TODO: Implemented using Gemini
-    async def _execute(self, query):
-        session = await mweb_orm.get_session()
-        try:
-            return await session.execute(query)
-        except Exception as e:
-            raise MwException(e)
-        finally:
-            # Ensures connection returns cleanly to the pool for every single read/fetch operation
-            await session.close()
-
-    async def _begin_execute(self, query):
-        session = await mweb_orm.get_session()
-        try:
-            # If an overall service transaction is already running, execute safely inside it
-            if session.in_transaction():
-                return await session.execute(query)
-
-            # If it's an isolated write (e.g., .update() / .delete()), run standard block
-            async with session.begin():
-                return await session.execute(query)
-        except Exception as e:
-            raise MwException(e)
-        finally:
-            # Ensures connections return to the engine pool even on write errors
-            await session.close()
-
 
     # TODO: Previously implemented Method, without AI
-    # async def _execute(self, query):
-    #     try:
-    #         async with await mweb_orm.get_session() as session:
-    #             return await session.execute(query)
-    #     except Exception as e:
-    #         raise MwException(e)
+    async def _execute(self, query):
+        try:
+            async with await mweb_orm.get_session() as session:
+                return await session.execute(query)
+        except Exception as e:
+            raise MwException(e)
 
-    # async def _begin_execute(self, query):
-    #     try:
-    #         async with await mweb_orm.get_session() as session:
-    #             async with session.begin():
-    #                 return await session.execute(query)
-    #     except Exception as e:
-    #         raise MwException(e)
-    #
+    async def _begin_execute(self, query):
+        try:
+            async with await mweb_orm.get_session() as session:
+                async with session.begin():
+                    return await session.execute(query)
+        except Exception as e:
+            raise MwException(e)
+
 
     def _add_loading_options(self, query):
         if self._fields:
