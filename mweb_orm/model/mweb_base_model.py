@@ -28,8 +28,7 @@ class MWebBaseModel(MWebMasterModel):
         self.__was_saved = False
         session = await mweb_orm.get_session()
         try:
-            # If a transaction is already active, use a sub-transaction (SAVEPOINT)
-            # This prevents validation queries from triggering a fatal database Autoflush crash
+            # Sub-transactions prevent validation queries from causing fatal crashes
             if session.in_transaction():
                 async with session.begin_nested():
                     await self._execute_save_workflow(session)
@@ -45,17 +44,25 @@ class MWebBaseModel(MWebMasterModel):
                 await session.rollback()
             raise MwException(e)
         finally:
-            # Crucial step: Explicitly close/return the session to the pool
-            # This completely removes the "SAWarning: garbage collector..." pool leak error
+            # Prevents connection pool memory/socket leaks
             await session.close()
 
         return self
 
     async def _execute_save_workflow(self, session):
         await self.before_save()
-        session.add(self)
-        await session.flush()
-        await session.refresh(self)
+        # If model has an ID, merge/update it; otherwise insert it
+        if hasattr(self, 'id') and self.id is not None:
+            merged = await session.merge(self)
+            # Safely sync attributes back to self without corrupting SQLAlchemy's internal state tracking
+            for key, value in merged.__dict__.items():
+                if key != '_sa_instance_state':
+                    self.__dict__[key] = value
+        else:
+            session.add(self)
+            await session.flush()
+            await session.refresh(self)
+
         await self.after_save()
 
     @classmethod
@@ -81,7 +88,16 @@ class MWebBaseModel(MWebMasterModel):
     async def _execute_save_all_workflow(cls, session, models: list[T]):
         for model in models:
             await model.before_save()
-            session.add(model)
+            if hasattr(model, 'id') and model.id is not None:
+                # Merge detached model and capture the returned session-bound instance
+                merged = await session.merge(model)
+                # Safely update original objects in your list so changes are visible in caller variables
+                for key, value in merged.__dict__.items():
+                    if key != '_sa_instance_state':
+                        model.__dict__[key] = value
+            else:
+                session.add(model)
+
         await session.flush()
 
         for model in models:
@@ -107,7 +123,13 @@ class MWebBaseModel(MWebMasterModel):
 
     async def _execute_delete_workflow(self, session):
         self.before_delete()
-        await session.delete(self)
+        # Ensure detached instances are cleanly attached before deletion
+        if inspect(self).detached:
+            attached = await session.merge(self)
+            await session.delete(attached)
+        else:
+            await session.delete(self)
+
         await session.flush()
         self.after_delete()
 
