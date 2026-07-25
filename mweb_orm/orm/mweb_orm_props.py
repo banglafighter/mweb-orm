@@ -111,13 +111,15 @@ class MWebORMProps:
             argument,
             viewonly: bool = False,
             lazy: LazyLoadType = "joined",
-            order_by: str | bool = False,
+            order_by=None,
             uselist: bool = True,
             primaryjoin: Optional[_RelationshipJoinConditionArgument] = None,
             remote_side: str | None = None,
             backref: str | None = None,
             secondaryjoin: Optional[_RelationshipJoinConditionArgument] = None,
-            back_populates: str | None = None
+            back_populates: str | None = None,
+            cascade=None,
+            **kwargs
     ):
         return relationship(
             argument=argument,
@@ -129,7 +131,9 @@ class MWebORMProps:
             remote_side=remote_side,
             backref=backref,
             back_populates=back_populates,
-            secondaryjoin=secondaryjoin
+            secondaryjoin=secondaryjoin,
+            cascade=cascade,
+            **kwargs
         )
 
     @property
