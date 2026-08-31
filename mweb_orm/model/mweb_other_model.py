@@ -34,5 +34,8 @@ class MWebModel(MWebDatedModel):
 
     async def before_save(self):
         if not self.uuid:
-            self.uuid = MwUtil.uuid7()
+            try:
+                self.uuid = MwUtil.uuid7()
+            except Exception as e:
+                self.uuid = MwUtil.uuid()
         return self
